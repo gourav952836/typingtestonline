@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Typing Test Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- ✅ Google AdSense Code -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4812851647103049"
+crossorigin="anonymous"></script>
+
+<style>
+/* (तुम्हारा पूरा CSS same रखा है) */
+html, body {
+  margin:0; padding:0; height:100%;
+  font-family: Arial;
+  background: linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.75)),
+  url('https://images.unsplash.com/photo-1508780709619-79562169bc64') no-repeat center center fixed;
+  background-size: cover;
+  color:white;
+}
+.top-section { text-align:center; margin-top:20px;}
+h1 { font-size:30px; color:#00ffcc; text-shadow:0 0 10px #00ffcc;}
+.button { text-decoration:none; padding:10px 18px; border-radius:25px; margin:5px; font-weight:bold; display:inline-block;}
+.yt-button {background:#ff0000;}
+.ig-button {background:#e1306c;}
+.lesson-bar {text-align:center; margin-top:10px;}
+.lesson-btn { margin:5px; padding:8px 15px; border-radius:20px; border:none; cursor:pointer; background:#00ffcc;}
+#main-container { display:flex; flex-direction:column; align-items:center; width:90%; max-width:1000px; margin:auto; margin-top:20px;}
+#text { width:50%; padding:15px; background:rgba(0,0,0,0.6); height:140px;}
+#input { width:50%; padding:10px; margin-top:10px;}
+#restartBtn { margin-top:15px; padding:12px 25px; border-radius:30px; background:linear-gradient(45deg,#00ffcc,#0099ff); border:none; cursor:pointer; color:black; font-weight:bold;}
+.correct {color:transparent;}
+.wrong {color:red;}
+#info-container { display:flex; justify-content:space-between; width:100%; margin-top:10px;}
+#timerDisplay, #history { background:rgba(0,0,0,0.6); padding:10px; border-radius:6px; width:48%;}
+#resultBox { position:fixed; top:0; left:0; width:100%; height:100%; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.8);}
+.result-content { background:linear-gradient(135deg,#00ffcc,#0099ff); padding:40px; border-radius:20px; text-align:center; color:black; width:350px; font-size:22px;}
+</style>
+</head>
+
+<body>
+
+<!-- ✅ FIX: preload + user interaction issue solve -->
+<audio id="typeSound" src="type.mp3" preload="auto"></audio>
+<audio id="errorSound" src="error.mp3" preload="auto"></audio>
+
+<div class="top-section">
+  <h1>✨ कोशिश करने वालों की कभी हार नहीं होती ✨</h1>
+
+  <div>
+    <a href="https://www.youtube.com/@gauravvargadhiya" target="_blank" class="button yt-button">▶ YouTube</a>
+    <a href="https://www.instagram.com/gaurav_vargadhiya" target="_blank" class="button ig-button">📸 Instagram</a>
+  </div>
+</div>
+
+<div class="lesson-bar">
+  <button class="lesson-btn" onclick="setLesson(0)">Part 1</button>
+  <button class="lesson-btn" onclick="setLesson(1)">Part 2</button>
+  <button class="lesson-btn" onclick="setLesson(2)">Part 3</button>
+  <button class="lesson-btn" onclick="setLesson(3)">Part 4</button>
+  <button class="lesson-btn" onclick="setLesson(4)">Part 5</button>
+  <button class="lesson-btn" onclick="setLesson(5)">Part 6</button>
+  <button class="lesson-btn" onclick="setLesson(6)">Part 7</button>
+  <button class="lesson-btn" onclick="setLesson(7)">Part 8</button>
+  <button class="lesson-btn" onclick="setLesson(8)">Part 9</button>
+  <button class="lesson-btn" onclick="setLesson(9)">Part 10</button>
+  <button class="lesson-btn" onclick="setLesson(10)">Part 11</button>
+</div>
+
+<div id="main-container">
+  <div id="text"></div>
+  <input type="text" id="input" placeholder="Start typing..." autofocus>
+  <button id="restartBtn" onclick="restart()">🔄 Restart</button>
+
+  <div id="info-container">
+    <div id="timerDisplay">
+      ⏱ Time: <span id="timer">0</span><br>
+      ⚡ Speed: <span id="speed">0</span> WPM<br>
+      🎯 Accuracy: <span id="accuracy">100</span>%
+    </div>
+    <div id="history">Previous Attempts:</div>
+  </div>
+</div>
+
+<div id="resultBox">
+  <div class="result-content">
+    <h2>🏆 RESULT</h2>
+    <div id="resultText"></div>
+    <button onclick="closeResult()">OK</button>
+  </div>
+</div>
+
+<script>
+
+const lessons = [
+`sad lad flask ask
+fall ask dad lad
+jakal salad flask
+lad ask sad fall`,
+
+`a sad lad falls fast
+dad asks all lads
+salad falls as flask
+a lad asks a sad dad`,
+
+`power wire rope
+quiet write type
+rower upper power
+type wire rope`,
+
+`we type power up
+quiet people write
+row your power up
+type write repeat`,
+
+`zoom mix zinc
+vex mix zone
+comic zone zoom
+mix move next`,
+
+`we mix and move next
+zoom over next mix
+comic zone is fun
+move next very fast`,
+
+`fast type and move quick
+we love typing very fast
+keep your speed up now
+never stop just type fast`,
+
+`this is new typing part
+practice more daily
+typing speed will increase`,
+
+`The Quick Brown Fox
+Jumps Over The Lazy Dog
+Type And Write Power
+Shift Keys Capital Letters`,
+
+`Practice Backspace Use
+Correct Your Mistakes
+Typing Is Fun And Fast
+Never Stop Just Type`,
+
+`Top and Middle Row Practice
+asdf gh jk l qwer tyu io
+practice daily typing fast
+home row and middle row keys`
+];
+
+let originalText=lessons[0];
+let currentIndex=0, startTime=null;
+let timerInterval, totalTyped=0, errors=0;
+
+const textDiv=document.getElementById("text");
+const input=document.getElementById("input");
+
+const typeSound=document.getElementById("typeSound");
+const errorSound=document.getElementById("errorSound");
+
+function setLesson(i){
+  originalText=lessons[i];
+  restart();
+}
+
+function loadText(){
+  textDiv.innerHTML=originalText.split("").map(c=>`<span>${c}</span>`).join("");
+}
+
+input.addEventListener("input", ()=>{
+  let spans=textDiv.querySelectorAll("span");
+  let val=input.value;
+
+  for(let i=0;i<spans.length;i++){
+    let char=val[i];
+
+    if(char==null){
+      spans[i].className="";
+    }
+    else if(char===originalText[i]){
+      spans[i].className="correct";
+
+      // ✅ FIX: sound play safe
+      typeSound.currentTime=0;
+      typeSound.play().catch(()=>{});
+    }
+    else{
+      spans[i].className="wrong";
+
+      errorSound.currentTime=0;
+      errorSound.play().catch(()=>{});
+    }
+  }
+
+  currentIndex=val.length;
+});
+
+function restart(){
+  input.value="";
+  loadText();
+}
+
+loadText();
+
+</script>
+
+</body>
+</html>
